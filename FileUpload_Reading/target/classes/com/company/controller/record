@@ -1,0 +1,706 @@
+02.21.04:27 (디비 저장 완료. 근데 desc가 빈 행은 저장되지 않고 모든 값이 들어간 행만 저장되는 현상)
+
+@Controller
+public class mainController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 업로드 화면 이동
+	@RequestMapping(value="/upload/uploadView")
+	public void uploadView() {
+	}
+	
+	// 업로드 기능
+	@RequestMapping(value="/upload/data", method=RequestMethod.POST)
+	public String upload(@RequestParam("file") MultipartFile file, 
+						 @ModelAttribute DataVO vo) throws IOException {
+		
+		// 여기서 데이터 처리
+		String line;
+		BufferedReader br 
+		= new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+		
+		// 조건이 잘못된 듯... 
+		while((line=br.readLine()) != null) {
+			
+			for(int i=0; i<6; i++) { // 6열
+				String[] array = line.split("/"); 
+				
+				// 저장하기
+				if (i==0) {
+					vo.setId(array[0]);
+				}else if (i==1) {
+					vo.setPwd(array[1]);
+				}else if (i==2) {
+					vo.setName(array[2]);
+				}else if (i==3) {
+					vo.setLevel(array[3].charAt(0));
+				}else if (i==4) {
+					if(array[4]=="") {
+						vo.setDesc(null);
+					}else {
+						vo.setDesc(array[4]);
+					}
+				}else if (i==5) {
+					vo.setReg_Date( Timestamp.valueOf(array[5]) );
+				}
+				// System.out.print(array[i]);
+			}
+			System.out.println();
+		}
+		
+		// 서비스 연결
+		dataService.save(vo);
+		// ArrayList<DataVO> list = dataService.save(vo);
+		
+		return "result/resultView";
+	}
+	
+	// 결과 화면 이동
+	@RequestMapping(value="result/resultView")
+	public void resultView() {
+	
+	}
+}
+
+======================================================================================
+
+
+02.21.06:21
+
+@Controller
+public class mainController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 업로드 화면 이동
+	@RequestMapping(value="/upload/uploadView")
+	public void uploadView() {
+	}
+	
+	// 업로드 기능
+	@RequestMapping(value="/upload/data", method=RequestMethod.POST)
+	public String upload(@RequestParam("file") MultipartFile file, 
+						 @ModelAttribute DataVO vo) throws IOException {
+        	
+        try {
+        	
+        	BufferedReader br 
+    		= new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+        	String line;
+        	
+        	while( (line=br.readLine()) != null) {
+        		
+        		String [] array = line.split("/");
+
+        		vo.setId(array[0]);
+        		vo.setPwd(array[1]);
+        		vo.setName(array[2]);
+        		vo.setLevel(array[3].charAt(0));
+        		vo.setDesc(array[4]);
+        		vo.setReg_Date(Timestamp.valueOf(array[5]));
+        		
+       		 	dataService.save(vo);
+        		
+        	} // while
+        	
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+		return "result/resultView";
+	}
+	
+	// 결과 화면 이동
+	@RequestMapping(value="result/resultView")
+	public void resultView() {
+	}
+}
+
+======================================================================================
+
+@Controller
+public class mainController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 업로드 화면 이동
+	@RequestMapping(value="/upload/uploadView")
+	public void uploadView() {
+	}
+	
+	// 업로드 기능
+	@RequestMapping(value="/upload/data", method=RequestMethod.POST)
+	public String upload(@RequestParam("file") MultipartFile file, 
+						 @ModelAttribute DataVO vo) throws IOException {
+        	
+        	BufferedReader br 
+    		= new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+        	String line;	// 파일 내용 저장할 곳
+        	int count = 0;  // 진행 라인 수 저장할 곳
+        	boolean clear;
+        	
+        	while( (line=br.readLine()) != null) {
+        		
+        		String [] array = line.split("/");
+
+        		// 잘못된 db는 건너뛰고 다음 행 저장 진행시킴
+        		try {
+        		
+        		count++; // 라인수 증가
+        		vo.setId(array[0]);
+        		vo.setPwd(array[1]);
+        		vo.setName(array[2]);
+        		vo.setLevel(array[3].charAt(0));
+        		vo.setDesc(array[4]);
+        		vo.setReg_Date(Timestamp.valueOf(array[5]));
+        		
+       		 	dataService.save(vo);
+        		
+        		} catch(Exception e) {
+        			
+        			// 실패한 라인번호(count)와 텍스트(array) 반환해서 그대로 들고, result_view로 이동
+        			clear = false;
+        			
+        			// 이걸 통째로 보내서, 뷰에 반환해서, clear=false인 경우 나오는 페이지랑 clear=true인 경우 나오는 페이지를 힌 jsp에 구분해서 구현
+        		}
+        		
+        	} // while
+		
+		return "result/resultView";
+		// 전부 성공하면 return resultView_suc
+	}
+	
+	// 결과 화면 이동 - 성공
+	@RequestMapping(value="result/resultView")
+	public void resultView_suc() {
+	
+	}
+	
+}
+
+======================================================================================
+
+
+02.23.06:43
+
+@Controller
+public class mainController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 업로드 화면 이동
+	@RequestMapping(value="/upload/uploadView")
+	public void uploadView() {
+	}
+	
+	// 업로드 기능
+	@RequestMapping(value="/upload/data", method=RequestMethod.POST)
+	public String upload(@RequestParam("file") MultipartFile file, 
+						 DataVO vo) throws IOException {
+        	// 선언부
+        	BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+        	String line; // 파일 내용 저장할 변수
+        	boolean complete = true ;
+        	
+//        	int count_f; // 총 실패건수
+//        	ArrayList<Integer> line_f;  // 실패한 라인번호 모으는 배열 
+//        	ArrayList<String> text_f;  // 실패한 라인번호 모으는 배열 
+        	
+        	// 데이터 처리부
+        	for(int i=1; (line=br.readLine()) != null; i++) { // 다음 줄이 없을 때까지 도는 for문
+        		
+        		String [] array = line.split("/");
+
+        		try{ // 잘못된 db는 건너뛰고 다음 행 저장 진행시키는 예외처리
+	        		vo.setId(array[0]);
+	        		vo.setPwd(array[1]);
+	        		vo.setName(array[2]);
+	        		vo.setLevel(array[3].charAt(0));
+	        		vo.setDesc(array[4]);
+	        		vo.setReg_Date(Timestamp.valueOf(array[5]));
+//	        		vo.setCompleteYn('Y');
+	        		
+	        		dataService.save(vo); // for 문 안에 있어야 모든 값을 등록
+
+        		}catch(Exception e) { // 예외 발생 시에만 실행되는 블럭 (== data가 null)
+        			System.out.println(e);
+        			complete = false;
+        			// count_f++;
+        			
+        			// i이용해서 line_f에 넘버 저장,  array이용해서 text_f에 실패 텍스트 저장
+        			// array도?
+        			
+        		}
+        	} // for문
+        	
+        	// count_f, line_f, text_f를 다음 페이지로 넘겨줄 수 있을려나? 모델앤뷰로 바꾸면? 
+        	
+        	// 다 돌고 난 뒤에
+        	if(complete==true) {
+        		return "redirect:/result/resultView_S"; // 나가는 화면
+        	}else {
+        		return "redirect:/result/resultView_F"; // 나가는 화면
+        	}
+	}
+	
+	// 결과 화면 이동 - 전체 성공
+	@RequestMapping(value="result/resultView_S")
+	public ModelAndView result_s(DataVO vo, HttpSession session) {
+		
+		DataVO results = dataService.result(vo);
+		ModelAndView mv = new ModelAndView();
+		
+		// 전체 입력 건수 가져오기 (db 인덱스나 아니면 전체 입력 건 가져오는 키)
+		// 화면에 전체 건수 반환
+
+		// 
+		mv.setViewName("조회화면"); // 나가는 화면
+		
+//		"result/resultView_S";
+		return mv;
+	}
+
+	// 결과 화면 이동 - 전체 / 일부 실패
+	@RequestMapping(value="result/resultView_F")
+	public void result_f() {
+		
+		// 실패한 건 db에서 못 가져온다 db에 없으니까... 어디서 가져오지? 세션? 
+		// 전체 입력 건수 가져오기 (마찬가지)
+		// 실패 건수랑 텍스트는 이전화면에서 받아와야 할 것 같은데
+	}
+}
+
+
+======================================================================================
+
+02.24.10:37
+
+@Controller
+public class mainController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 업로드 화면 이동
+	@RequestMapping(value="/upload/uploadView")
+	public void uploadView() {
+	}
+	
+	// 업로드 기능
+	@RequestMapping(value="/upload/data", method=RequestMethod.POST)
+	public ModelAndView upload(@RequestParam("file") MultipartFile file, 
+						 DataVO vo) throws IOException {
+        	// 선언부
+        	BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+        	String line = ""; // 파일 내용 저장할 변수
+        	boolean complete = true ;
+        	ModelAndView mv = new ModelAndView();
+        	
+        	String test="";
+        	int count_f = 0; // 총 실패건수
+        	ArrayList<Integer> line_f = new ArrayList<Integer>();  // 실패한 라인번호 모으는 배열 
+        	ArrayList<String> text_f = new ArrayList<String>();  // 실패한 텍스트 모으는 배열 
+        	
+        	// 데이터 처리부
+        	for(int i=1; (line=br.readLine()) != null; i++) { // 다음 줄이 없을 때까지 도는 for문
+        		
+        		String [] array = line.split("/");
+
+        		try{ // 잘못된 db는 건너뛰고 다음 행 저장 진행시키는 예외처리
+	        		vo.setId(array[0]);
+	        		vo.setPwd(array[1]);
+	        		vo.setName(array[2]);
+	        		vo.setLevel(array[3].charAt(0));
+	        		vo.setDesc(array[4]);
+	        		vo.setReg_Date(Timestamp.valueOf(array[5]));
+	        		
+	        		dataService.save(vo); // for 문 안에 있어야 모든 값을 등록
+
+        		}catch(Exception e) { // 예외 발생 시에만 실행되는 블럭 (== data가 null)
+        			System.out.println(e);
+        			complete = false;
+        			count_f++;
+        			
+        			// i이용해서 line_f에 넘버 저장,  array이용해서 text_f에 실패 텍스트 저장
+        			line_f.add(i);
+        			text_f.add(line);
+        			
+        		}
+        	} // for문
+        	
+        	// count_f, line_f, text_f를 다음 페이지로 넘겨줄 수 있을려나? 모델앤뷰로 바꾸면? 
+        	
+        	// 다 돌고 난 뒤에
+        	if(complete==true) {
+        		mv.setViewName ("redirect:/result/resultView_S"); // 나가는 화면
+        	}else {
+        		// 세션에 저장해서 set하고 jsp에서 get으로 불러와야하나...
+        		mv.addObject("count_f", count_f);
+        		mv.addObject("line_f", line_f);
+        		mv.addObject("text_f", text_f);
+        		
+        		mv.setViewName("redirect:/result/resultView_F"); // 나가는 화면
+        	}
+        	
+        	return mv;
+	}
+	
+	// 결과 화면 이동 - 전체 성공
+	@RequestMapping(value="result/resultView_S")
+	public ModelAndView result_s(DataVO vo, HttpSession session) {
+		
+		DataVO results = dataService.result(vo);
+		ModelAndView mv = new ModelAndView();
+		
+		// 전체 입력 건수 가져오기 (db 인덱스나 아니면 전체 입력 건 가져오는 키)
+		// 화면에 전체 건수 반환
+
+//		mv.setViewName("조회화면"); // 나가는 화면
+		
+//		"result/resultView_S";
+		return mv;
+	}
+
+	// 결과 화면 이동 - 전체 / 일부 실패
+	@RequestMapping(value="result/resultView_F")
+	public void result_f() {
+		
+		// 실패한 건 db에서 못 가져온다 db에 없으니까... 어디서 가져오지? 세션? 
+		// 전체 입력 건수 가져오기 (마찬가지)
+		// 실패 건수랑 텍스트는 이전화면에서 받아와야 할 것 같은데
+	}
+}
+
+
+======================================================================================
+
+<%@page import="java.util.ArrayList"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8" isELIgnored="false" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>   
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %> 
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>전체/일부 실패 결과화면</title>
+<script>
+
+
+</script>
+</head>
+<body>
+	<div>
+	전체/일부 실패 결과화면
+	<!-- 화면에서 쏴준 데이터만 받아오면 될 것 같은데 -->
+	<!-- url로 받아오네?????? -->
+	<!-- url에서 값을 뽑아서 뭐 자바 %%이걸로 뽑든 아무튼 뽑아서 화면에 출력만 하면 -->
+	<p> 실패 <%= request.getParameter("count_f") %>건</p>
+	
+	
+	<%
+		ArrayList test = (ArrayList)session.getAttribute("line_f");
+		ArrayList test2 = (ArrayList)session.getAttribute("text_f");
+		
+		
+			for (int i=0; i<test.size(); i++){
+	%>
+	
+				<%= test.get(i) %> <br/>
+	
+	<% 
+				for(int j=0; j<test2.size(); j++){
+	%>
+	
+				<%= test2.get(j) %> <br/>
+				
+	<%		
+			}
+		}
+	%>	
+	
+	</div>
+</body>
+</html>
+
+======================================================================================
+
+@Controller
+public class mainController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 업로드 화면 이동
+	@RequestMapping(value="/upload/uploadView")
+	public void uploadView() {
+	}
+	
+	// 업로드 기능
+	@RequestMapping(value="/upload/data", method=RequestMethod.POST)
+	public String upload(@RequestParam("file") MultipartFile file, 
+						 DataVO vo, Model model, HttpSession session ) throws IOException {
+        	// 선언부
+        	BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+        	String line = ""; // 파일 내용 저장할 변수
+        	boolean complete = true ;
+//        	ModelAndView mv = new ModelAndView();
+        	
+        	int count_f = 0; // 총 실패건수
+        	ArrayList<Integer> line_f = new ArrayList<Integer>();  // 실패한 라인번호 모으는 배열 
+        	ArrayList<String> text_f = new ArrayList<String>();  // 실패한 텍스트 모으는 배열 
+        	
+        	// 데이터 처리부
+        	for(int i=1; (line=br.readLine()) != null; i++) { // 다음 줄이 없을 때까지 도는 for문
+        		
+        		String [] array = line.split("/");
+
+        		try{ // 잘못된 db는 건너뛰고 다음 행 저장 진행시키는 예외처리
+	        		vo.setId(array[0]);
+	        		vo.setPwd(array[1]);
+	        		vo.setName(array[2]);
+	        		vo.setLevel(array[3].charAt(0));
+	        		vo.setDesc(array[4]);
+	        		vo.setReg_Date(Timestamp.valueOf(array[5]));
+	        		
+	        		dataService.save(vo); // for 문 안에 있어야 모든 값을 등록
+
+        		}catch(Exception e) { // 예외 발생 시에만 실행되는 블럭 (== data가 null)
+//        			System.out.println(e);
+        			complete = false;
+        			count_f++;
+        			// i이용해서 line_f에 넘버 저장,  array이용해서 text_f에 실패 텍스트 저장
+        			line_f.add(i);
+        			text_f.add(line);
+        			
+        		}
+        	} // for문
+        	
+        	// count_f, line_f, text_f를 다음 페이지로 넘겨줄 수 있을려나? 모델앤뷰로 바꾸면? 
+        	
+        	// 다 돌고 난 뒤에
+        	if(complete==true) {
+        		return "redirect:/result/resultView_S"; // 나가는 화면 // redirect 시 get으로 변한다..
+        	}else {
+        		// 세션에 저장해서 set하고 jsp에서 get으로 불러와야하나...
+        		// model에 저장하면 redirect로만 값 전달됨
+        		model.addAttribute("count_f", count_f); // 잘됨
+        		
+        		// session에 저장하면 리다이렉트, 리다이렉트 아니어도 값 전달됨
+//        		session.setAttribute("test", 2); // 잘됨
+        		session.setAttribute("line_f", line_f); // 실패 라인번호 배열
+        		session.setAttribute("text_f", text_f); // 실패 텍스트 배열
+        		
+        		return "redirect:/result/resultView_F"; // 나가는 화면
+        	}
+	}
+	
+	// 결과 화면 이동 - 전체 성공
+	@RequestMapping(value="result/resultView_S")
+	public ModelAndView result_s(DataVO vo, HttpSession session) {
+		
+		DataVO results = dataService.result(vo);
+		ModelAndView mv = new ModelAndView();
+		
+		// 전체 입력 건수 가져오기 (db 인덱스나 아니면 전체 입력 건 가져오는 키)
+		// 화면에 전체 건수 반환
+
+//		mv.setViewName("조회화면"); // 나가는 화면
+		
+//		"result/resultView_S";
+		return mv;
+	}
+
+	// 결과 화면 이동 - 전체 / 일부 실패
+//	@RequestMapping(value="result/resultView_F", method=RequestMethod.GET) // 리다이렉트 해서 get으로 들어옴
+	@RequestMapping(value="result/resultView_F") // 리다이렉트 해서 get으로 들어옴
+	public void result_f(/*HttpSession session*/) {
+		
+		
+		// 실패한 건 db에서 못 가져온다 db에 없으니까... 어디서 가져오지? 세션? 
+		// 전체 입력 건수 가져오기 (마찬가지)
+		// 실패 건수랑 텍스트는 이전화면에서 받아와야 할 것 같은데
+		
+		// 리다이렉트해서 값 받아오고 여기서 get으로 한번 더 받아오면 어떨까 그리고 모델로 반환해주면??
+//		session.getAttribute("test2");
+		
+		
+	}
+}
+
+======================================================================================
+
+02.25.04:22
+
+
+mainController
+
+@Controller
+@RequestMapping("/upload")
+public class mainController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 업로드 화면 이동
+	@RequestMapping(value="/uploadView")
+	public void uploadView() {
+	}
+	
+	// 업로드 기능
+	@RequestMapping(value="/data", method=RequestMethod.POST)
+	public String upload(@RequestParam("file") MultipartFile file, 
+						 DataVO vo, Model model, HttpSession session ) throws IOException {
+        	// 선언부
+        	BufferedReader br = new BufferedReader(new InputStreamReader(file.getInputStream(), "UTF-8"));
+        	String line = ""; // 파일 내용 저장할 변수
+        	boolean complete = true ; // 예외발생여부 구분
+        	int count = 0;	 // 성공 건수
+        	int count_f = 0; // 실패건수
+        	ArrayList<Integer> line_f = new ArrayList<Integer>();  // 실패한 라인번호 모으는 배열 
+        	ArrayList<String> text_f = new ArrayList<String>();    // 실패한 텍스트 모으는 배열 
+        	
+        	// 데이터 처리부
+        	for(int i=1; (line=br.readLine()) != null; i++) { // 다음 줄이 없을 때까지 도는 for문
+        		
+        		String [] array = line.split("/");
+        		try{ // 잘못된 db는 건너뛰고 다음 행 저장 진행시키는 예외처리
+	        		vo.setId(array[0]);
+	        		vo.setPwd(array[1]);
+	        		vo.setName(array[2]);
+	        		vo.setLevel(array[3].charAt(0));
+	        		vo.setDesc(array[4]);
+	        		vo.setReg_Date(Timestamp.valueOf(array[5]));
+	        		
+	        		dataService.save(vo); // for 문 안에 있어야 모든 값을 등록
+	        		count++;
+
+        		}catch(Exception e) {
+        			complete = false; // 예외발생
+        			count_f++; // 실패건수 증가
+        			// i이용해서 line_f에 넘버 저장,  array이용해서 text_f에 실패 텍스트 저장
+        			line_f.add(i);
+        			text_f.add(line);
+        		}
+        	} // for문
+        	
+        	// 다 돌고 난 뒤에
+        	if(complete==true) {
+        		// 세션 통해서 
+        		session.setAttribute("count", count);
+        		return "redirect:/result/resultView_S"; // 나가는 화면 // redirect 시 get으로 변한다..
+        	}else {
+        		// model에 저장하면 redirect로만 값 전달됨
+        		// model.addAttribute("count_f", count_f); // 잘됨
+        		// session에 저장하면 리다이렉트, 리다이렉트 아니어도 값 전달됨
+        		session.setAttribute("count_f", count_f); // 잘됨
+        		session.setAttribute("line_f", line_f); // 실패 라인번호 배열
+        		session.setAttribute("text_f", text_f); // 실패 텍스트 배열
+        		
+        		return "redirect:/result/resultView_F"; // 나가는 화면
+        	}
+	}
+}
+
+secondController
+@Controller
+@RequestMapping("/result")
+public class secondController {
+
+	@Autowired
+	@Qualifier("DataService")
+	DataService dataService;
+	
+	// 결과 화면 이동 - 전체 성공
+	@RequestMapping(value="/resultView_S")
+	public void result_s(DataVO vo, HttpSession session) {
+	}
+	
+	// 조회 기능
+	@ResponseBody 
+	@RequestMapping(value="/list")
+	public ResponseEntity<DataVO> list(@RequestBody(required = false) DataVO data) {
+		
+		// 서비스 연결
+//		List<DataVO> results = dataService.getList();
+		List<DataVO> results = dataService.getList(data);
+		
+		
+		ResponseEntity<DataVO> entity = null;
+		
+		try {
+			HttpHeaders header= new HttpHeaders();
+			header.add("Content-type", "application/json");
+			entity =new ResponseEntity<DataVO>((DataVO)results, header, HttpStatus.OK);
+//			entity =new ResponseEntity<DataVO>(results, HttpStatus.OK);
+		}catch(Exception e) {
+			System.out.println(e);
+		}
+		return entity;
+	}
+	
+	// 결과 화면 이동 - 전체 / 일부 실패
+	@RequestMapping(value="/resultView_F") // 리다이렉트 해서 get으로 들어옴
+	public void result_f() {
+		
+	}
+}
+
+
+resultView_S.jsp
+
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>   
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %> 
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>전체 성공 결과화면</title>
+<script src="${pageContext.request.contextPath}/resources/js/jquery.js"></script>
+</head>
+<body>
+<div>
+<p>전체 성공 결과화면</p>
+<%= session.getAttribute("count")  %>건 입력성공 <br/>
+<br/>
+    <button type="submit" id="resBtn" name="resBtn" >조회</button>
+
+</div>
+<script>
+
+$("#resBtn").click(function(){
+  $.ajax({
+	  type:"post", // 보내는방식
+	  url: "list",//보내는주소
+	  contentType:"application/json; charset=UTF-8", // 화면 -> 서버
+//	  dataType:"application/json; charset=UTF-8",
+	  success :function(data){
+		  // 통신에 성공했을 때 출력하기
+		  alert("테스트 - 성공");
+	  },
+	  error : function(){
+		  // 실패했을 때 실행
+		  alert("테스트-오류");
+	  }
+  });
+});
+</script>
+</body>
+</html>
+
+
+======================================================================================
+

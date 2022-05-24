@@ -1,0 +1,12 @@
+drop table data;
+
+CREATE TABLE data (
+   id VARCHAR2(16) PRIMARY KEY,
+   pwd VARCHAR2(32) NOT NULL,
+   name VARCHAR2(128) NOT NULL,
+   "level" CHAR(1) NOT NULL,
+   "desc" VARCHAR2(256),
+   reg_date TIMESTAMP default SYSDATE NOT NULL 
+);
+
+SELECT * FROM data;
